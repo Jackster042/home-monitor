@@ -2,7 +2,7 @@
 
 ## Goal
 
-Build a self-hosted home monitoring system that runs on a Raspberry Pi 5, ingests RTSP camera streams through Frigate, stores event metadata in PostgreSQL, exposes a custom backend API, provides a web UI for monitoring and review, backs up media to AWS S3, and sends notifications for important events and system issues.
+Build a self-hosted home monitoring system that runs on a Raspberry Pi 5, ingests RTSP camera streams through Frigate, stores event metadata in PostgreSQL, exposes a custom backend API, provides a web UI for monitoring and review, backs up media to Cloudflare R2 with Backblaze B2 as fallback storage, and sends notifications for important events and system issues.
 
 ## Working Principles
 
@@ -59,8 +59,9 @@ WiFi Cameras (RTSP)
   -> Backend API + Jobs
   -> PostgreSQL
   -> Frontend
-  -> AWS S3
-  -> SES Email Notifications
+  -> Cloudflare R2
+  -> Backblaze B2 (fallback)
+  -> AWS SES Email Notifications
 ```
 
 ## MVP Scope
@@ -71,7 +72,7 @@ The first usable version should do the following:
 2. Receive Frigate events over MQTT.
 3. Persist cameras, events, snapshots, and clips metadata in PostgreSQL.
 4. Show dashboard and event history in the frontend.
-5. Upload snapshots and clips to S3.
+5. Upload snapshots and clips to Cloudflare R2, with Backblaze B2 available as fallback storage.
 6. Send email alerts and digest reports.
 7. Expose the app locally behind Nginx.
 
@@ -155,15 +156,17 @@ Success criteria:
 
 Deliverables:
 
-- S3 bucket configured
+- Cloudflare R2 bucket configured as primary object storage
+- Backblaze B2 bucket configured as fallback object storage
 - Upload service created for snapshots and clips
 - Retry-safe backup job added
-- S3 metadata stored in database
+- Cloud object storage metadata stored in database
 - Local retention policy defined
 
 Success criteria:
 
-- New media uploads to S3 after event processing
+- New media uploads to Cloudflare R2 after event processing
+- Failed primary uploads can be redirected or retried against Backblaze B2
 - Failed uploads are visible and retryable
 - Local storage usage remains bounded
 
@@ -240,7 +243,7 @@ Core tables:
 Notes:
 
 - Use a Frigate event identifier to link backend records to Frigate events.
-- Store local paths and S3 metadata separately.
+- Store local paths and cloud object storage metadata separately.
 - Avoid storing sensitive camera connection data in plain text unless required.
 
 ## Key Technical Decisions
@@ -249,7 +252,9 @@ Notes:
 - Notifications start with SES email only.
 - Frigate inference hardware remains open until tested.
 - Remote access comes after local stability.
-- S3 uploads should happen in background jobs, not inline in MQTT handling.
+- Cloudflare R2 is the primary backup target, with Backblaze B2 kept as the fallback provider.
+- AWS SES is used for email notifications only, not for media storage.
+- Cloud storage uploads should happen in background jobs, not inline in MQTT handling.
 
 ## Risks
 
@@ -265,7 +270,7 @@ Notes:
 - Event metadata is persisted in PostgreSQL
 - Snapshot appears in frontend event view
 - Clip metadata appears in frontend clip view
-- Snapshot or clip uploads to S3 successfully
+- Snapshot or clip uploads to Cloudflare R2 successfully
 - Email alert or digest sends successfully
 - Dashboard shows camera and service health
 
@@ -280,5 +285,5 @@ Notes:
 ## Current Status
 
 - Planning document created
-- Repo scaffold not yet created
+- Default repo scaffold created
 - No services implemented yet
