@@ -35,4 +35,9 @@ pnpm typecheck
 ## Status
 
 - Default repo scaffold created
+- Architecture and planning docs added under `docs/`
 - Implementation work starts next with backend, frontend, and Docker service wiring
+
+## Documentation
+
+See `docs/README.md` for the architecture and design documentation set.
