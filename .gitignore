@@ -1,0 +1,16 @@
+node_modules/
+.pnpm-store/
+dist/
+coverage/
+.vite/
+.turbo/
+
+.env
+.env.local
+.env.*.local
+
+apps/backend/prisma/dev.db
+apps/backend/prisma/dev.db-journal
+
+.DS_Store
+Thumbs.db
