@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Camera {
+  id          String   @id @default(cuid())
+  name        String
+  location    String?
+  frigateName String?  @unique
+  status      String   @default("planned")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  events      Event[]
+}
+
+model Event {
+  id             String     @id @default(cuid())
+  frigateEventId String?    @unique
+  cameraId       String
+  type           String
+  startedAt      DateTime
+  endedAt        DateTime?
+  acknowledgedAt DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  camera         Camera     @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+  snapshots      Snapshot[]
+  clips          Clip[]
+}
+
+model Snapshot {
+  id         String   @id @default(cuid())
+  eventId     String
+  localPath   String?
+  provider    String?
+  objectKey   String?
+  objectUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Clip {
+  id         String   @id @default(cuid())
+  eventId    String
+  localPath  String?
+  provider   String?
+  objectKey  String?
+  objectUrl  String?
+  durationSec Int?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id         String   @id @default(cuid())
+  eventId    String?
+  type       String
+  channel    String
+  recipient  String?
+  status     String
+  payload    Json?
+  sentAt     DateTime?
+  createdAt  DateTime @default(now())
+}
+
+model SystemHealth {
+  id         String   @id @default(cuid())
+  service    String
+  status     String
+  message    String?
+  checkedAt  DateTime @default(now())
+}
