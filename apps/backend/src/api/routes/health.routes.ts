@@ -3,6 +3,7 @@ import { healthService } from "../../health/health.service";
 
 export const healthRouter = Router();
 
-healthRouter.get("/health", (_request, response) => {
-  response.json(healthService.getSnapshot());
+healthRouter.get("/health", async (_request, response) => {
+  const snapshot = await healthService.getSnapshot();
+  response.json(snapshot);
 });

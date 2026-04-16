@@ -1,24 +1,20 @@
 import { createApp } from "./app";
+import { bootstrapApplication, shutdownApplication } from "./config/bootstrap";
 import { env } from "./config/env";
-import { prisma } from "./db/client";
-import { jobsService } from "./jobs/jobs.service";
-import { mqttService } from "./mqtt/mqtt.service";
 
-const app = createApp();
+async function main() {
+  await bootstrapApplication();
 
-async function bootstrap() {
+  const app = createApp();
   const server = app.listen(env.APP_PORT, () => {
     console.log(`Backend listening on http://localhost:${env.APP_PORT}`);
   });
-
-  jobsService.register();
-  mqttService.register();
 
   const shutdown = async (signal: string) => {
     console.log(`${signal} received, shutting down backend`);
 
     server.close(async () => {
-      await prisma.$disconnect();
+      await shutdownApplication();
       process.exit(0);
     });
   };
@@ -32,4 +28,8 @@ async function bootstrap() {
   });
 }
 
-void bootstrap();
+void main().catch(async (error: unknown) => {
+  console.error("Backend bootstrap failed", error);
+  await shutdownApplication();
+  process.exit(1);
+});
